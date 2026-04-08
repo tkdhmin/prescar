@@ -1,0 +1,31 @@
+#-----------------------------------------------------------
+# Vivado v2019.1 (64-bit)
+# SW Build 2552052 on Fri May 24 14:47:09 MDT 2019
+# IP Build 2548770 on Fri May 24 18:01:18 MDT 2019
+# Start of session at: Fri Apr 18 15:45:48 2025
+# Process ID: 68647
+# Current directory: /home/micron/vectorssd
+# Command line: vivado
+# Log file: /home/micron/vectorssd/vivado.log
+# Journal file: /home/micron/vectorssd/vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project /home/micron/zns_large_zone/cosm-plus-sys.xpr
+update_compile_order -fileset sources_1
+launch_sdk -workspace /home/micron/zns_large_zone/cosm-plus-sys.sdk -hwspec /home/micron/zns_large_zone/cosm-plus-sys.sdk/sys_top_wrapper.hdf
+launch_sdk -workspace /home/micron/zns_large_zone/cosm-plus-sys.sdk -hwspec /home/micron/zns_large_zone/cosm-plus-sys.sdk/sys_top_wrapper.hdf
+open_hw
+connect_hw_server
+open_hw_target
+current_hw_device [get_hw_devices xc7z045_1]
+refresh_hw_device -update_hw_probes false [lindex [get_hw_devices xc7z045_1] 0]
+set_property PROBES.FILE {} [get_hw_devices xc7z045_1]
+set_property FULL_PROBES.FILE {} [get_hw_devices xc7z045_1]
+set_property PROGRAM.FILE {/home/micron/zns_large_zone/cosm-plus-sys.sdk/sys_top_wrapper_hw_platform_0/sys_top_wrapper.bit} [get_hw_devices xc7z045_1]
+program_hw_devices [get_hw_devices xc7z045_1]
+refresh_hw_device [lindex [get_hw_devices xc7z045_1] 0]
+set_property PROBES.FILE {} [get_hw_devices xc7z045_1]
+set_property FULL_PROBES.FILE {} [get_hw_devices xc7z045_1]
+set_property PROGRAM.FILE {/home/micron/zns_large_zone/cosm-plus-sys.sdk/sys_top_wrapper_hw_platform_0/sys_top_wrapper.bit} [get_hw_devices xc7z045_1]
+program_hw_devices [get_hw_devices xc7z045_1]
+refresh_hw_device [lindex [get_hw_devices xc7z045_1] 0]
