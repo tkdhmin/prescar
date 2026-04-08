@@ -54,6 +54,7 @@ dkms.conf
 
 # Metadata
 .metadata/
+.sdk/
 
 # Tags
 tags
