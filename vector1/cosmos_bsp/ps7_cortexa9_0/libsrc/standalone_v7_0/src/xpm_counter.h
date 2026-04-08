@@ -1,61 +1,61 @@
 /******************************************************************************
-*
-* Copyright (C) 2011 - 2018 Xilinx, Inc.  All rights reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-* XILINX  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
-* OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE.
-*
-* Except as contained in this notice, the name of the Xilinx shall not be used
-* in advertising or otherwise to promote the sale, use or other dealings in
-* this Software without prior written authorization from Xilinx.
-*
-******************************************************************************/
+ *
+ * Copyright (C) 2011 - 2018 Xilinx, Inc.  All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * XILINX  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ * Except as contained in this notice, the name of the Xilinx shall not be used
+ * in advertising or otherwise to promote the sale, use or other dealings in
+ * this Software without prior written authorization from Xilinx.
+ *
+ ******************************************************************************/
 /*****************************************************************************/
 /**
-*
-* @file xpm_counter.h
-*
-* @addtogroup a9_event_counter_apis Cortex A9 Event Counters Functions
-*
-* Cortex A9 event counter functions can be utilized to configure and control
-* the Cortex-A9 performance monitor events.
-*
-* Cortex-A9 performance monitor has six event counters which can be used to
-* count a variety of events described in Coretx-A9 TRM. xpm_counter.h defines
-* configurations XPM_CNTRCFGx which can be used to program the event counters
-* to count a set of events.
-*
-* @note
-* It doesn't handle the Cortex-A9 cycle counter, as the cycle counter is
-* being used for time keeping.
-*
-* @{
-*
-* <pre>
-* MODIFICATION HISTORY:
-*
-* Ver   Who  Date     Changes
-* ----- ---- -------- -----------------------------------------------
-* 1.00a sdm  07/11/11 First release
-* 6.8   aru  09/06/18 Removed compilation warnings for ARMCC toolchain.
-* </pre>
-*
-******************************************************************************/
+ *
+ * @file xpm_counter.h
+ *
+ * @addtogroup a9_event_counter_apis Cortex A9 Event Counters Functions
+ *
+ * Cortex A9 event counter functions can be utilized to configure and control
+ * the Cortex-A9 performance monitor events.
+ *
+ * Cortex-A9 performance monitor has six event counters which can be used to
+ * count a variety of events described in Coretx-A9 TRM. xpm_counter.h defines
+ * configurations XPM_CNTRCFGx which can be used to program the event counters
+ * to count a set of events.
+ *
+ * @note
+ * It doesn't handle the Cortex-A9 cycle counter, as the cycle counter is
+ * being used for time keeping.
+ *
+ * @{
+ *
+ * <pre>
+ * MODIFICATION HISTORY:
+ *
+ * Ver   Who  Date     Changes
+ * ----- ---- -------- -----------------------------------------------
+ * 1.00a sdm  07/11/11 First release
+ * 6.8   aru  09/06/18 Removed compilation warnings for ARMCC toolchain.
+ * </pre>
+ *
+ ******************************************************************************/
 
 #ifndef XPMCOUNTER_H /* prevent circular inclusions */
 #define XPMCOUNTER_H /* by using protection macros */
@@ -63,8 +63,9 @@
 /***************************** Include Files ********************************/
 
 #include <stdint.h>
-#include "xpseudo_asm.h"
+
 #include "xil_types.h"
+#include "xpseudo_asm.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -538,17 +539,17 @@ extern "C" {
  *			  XPM_EVENT_DATA_CACHEACCESS,
  *			  XPM_EVENT_DATA_TLBREFILL }
  */
-#define XPM_CNTRCFG1	0
-#define XPM_CNTRCFG2	1
-#define XPM_CNTRCFG3	2
-#define XPM_CNTRCFG4	3
-#define XPM_CNTRCFG5	4
-#define XPM_CNTRCFG6	5
-#define XPM_CNTRCFG7	6
-#define XPM_CNTRCFG8	7
-#define XPM_CNTRCFG9	8
-#define XPM_CNTRCFG10	9
-#define XPM_CNTRCFG11	10
+#define XPM_CNTRCFG1 0
+#define XPM_CNTRCFG2 1
+#define XPM_CNTRCFG3 2
+#define XPM_CNTRCFG4 3
+#define XPM_CNTRCFG5 4
+#define XPM_CNTRCFG6 5
+#define XPM_CNTRCFG7 6
+#define XPM_CNTRCFG8 7
+#define XPM_CNTRCFG9 8
+#define XPM_CNTRCFG10 9
+#define XPM_CNTRCFG11 10
 
 /**************************** Type Definitions ******************************/
 
@@ -568,5 +569,5 @@ void Xpm_GetEventCounters(u32 *PmCtrValue);
 
 #endif
 /**
-* @} End of "addtogroup a9_event_counter_apis".
-*/
+ * @} End of "addtogroup a9_event_counter_apis".
+ */

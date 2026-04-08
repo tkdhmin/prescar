@@ -15,10 +15,10 @@
 *
 *The above copyright notice and this permission notice shall be included in
 *all copies or substantial portions of the Software.
-* 
+*
 *THE SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 *IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-*FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+*FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 *XILINX BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 *WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 *OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -28,13 +28,13 @@
 *this Software without prior written authorization from Xilinx.
 *
 
-* 
+*
 * Description: Configurations for Standalone BSP
 *
 *******************************************************************/
 
-#ifndef BSPCONFIG_H  /* prevent circular inclusions */
-#define BSPCONFIG_H  /* by using protection macros */
+#ifndef BSPCONFIG_H /* prevent circular inclusions */
+#define BSPCONFIG_H /* by using protection macros */
 
 #define MICROBLAZE_PVR_NONE
 

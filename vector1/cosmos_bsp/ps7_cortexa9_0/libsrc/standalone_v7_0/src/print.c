@@ -19,18 +19,17 @@
  */
 #include "xil_printf.h"
 
-void print(const char8 *ptr)
-{
+void print(const char8 *ptr) {
 #if HYP_GUEST && EL1_NONSECURE && XEN_USE_PV_CONSOLE
-	XPVXenConsole_Write(ptr);
+  XPVXenConsole_Write(ptr);
 #else
 #ifdef STDOUT_BASEADDRESS
   while (*ptr != (char8)0) {
-    outbyte (*ptr);
-	ptr++;
+    outbyte(*ptr);
+    ptr++;
   }
 #else
-(void)ptr;
+  (void)ptr;
 #endif
 #endif
 }

@@ -12,7 +12,7 @@ INCLUDES=-I./. -I${INCLUDEDIR}
 INCLUDEFILES=*.h
 
 LIBSOURCES=*.c
-OUTS = *.o 
+OUTS = *.o
 OBJECTS =	$(addsuffix .o, $(basename $(wildcard *.c)))
 
 libs:
@@ -21,8 +21,8 @@ libs:
 	$(ARCHIVER) -r ${RELEASEDIR}/${LIB} $(OBJECTS)
 	make clean
 
-include: 
-	 ${CP} ${INCLUDEFILES} ${INCLUDEDIR} 
+include:
+	 ${CP} ${INCLUDEFILES} ${INCLUDEDIR}
 
 clean:
 	rm -rf ${OBJECTS}

@@ -15,10 +15,10 @@
 *
 *The above copyright notice and this permission notice shall be included in
 *all copies or substantial portions of the Software.
-* 
+*
 *THE SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 *IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-*FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+*FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 *XILINX BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 *WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 *OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -28,7 +28,7 @@
 *this Software without prior written authorization from Xilinx.
 *
 
-* 
+*
 * Description: Driver configuration
 *
 *******************************************************************/
@@ -37,22 +37,10 @@
 #include "xsdps.h"
 
 /*
-* The configuration table for devices
-*/
+ * The configuration table for devices
+ */
 
-XSdPs_Config XSdPs_ConfigTable[XPAR_XSDPS_NUM_INSTANCES] =
-{
-	{
-		XPAR_PS7_SD_0_DEVICE_ID,
-		XPAR_PS7_SD_0_BASEADDR,
-		XPAR_PS7_SD_0_SDIO_CLK_FREQ_HZ,
-		XPAR_PS7_SD_0_HAS_CD,
-		XPAR_PS7_SD_0_HAS_WP,
-		XPAR_PS7_SD_0_BUS_WIDTH,
-		XPAR_PS7_SD_0_MIO_BANK,
-		XPAR_PS7_SD_0_HAS_EMIO,
-		XPAR_PS7_SD_0_IS_CACHE_COHERENT
-	}
-};
-
-
+XSdPs_Config XSdPs_ConfigTable[XPAR_XSDPS_NUM_INSTANCES] = {
+    {XPAR_PS7_SD_0_DEVICE_ID, XPAR_PS7_SD_0_BASEADDR, XPAR_PS7_SD_0_SDIO_CLK_FREQ_HZ, XPAR_PS7_SD_0_HAS_CD,
+     XPAR_PS7_SD_0_HAS_WP, XPAR_PS7_SD_0_BUS_WIDTH, XPAR_PS7_SD_0_MIO_BANK, XPAR_PS7_SD_0_HAS_EMIO,
+     XPAR_PS7_SD_0_IS_CACHE_COHERENT}};
