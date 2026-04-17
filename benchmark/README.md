@@ -15,15 +15,14 @@ sudo apt install pybind11-dev
 It is required to check where the pybind11 has been installed using the following:
 ```bash
 python -m pybind11 --cmakedir
-# E.g., /home/dhmin/miniconda3/envs/mdh/lib/python3.9/site-packages/pybind11/share/cmake/pybind11
+# E.g., /home/devuser/miniconda3/envs/mdh/lib/python3.9/site-packages/pybind11/share/cmake/pybind11
 ```
 
 Create makefile using cmake with the dependency options:
 ```bash
 mkdir build
 cd build
-cmake .. -Dpybind11_DIR=/home/dhmin/miniconda3/env
-s/mdh/lib/python3.9/site-packages/pybind11/share/cmake/pybind11
+cmake .. -Dpybind11_DIR=/home/devuser/miniconda3/envs/mdh/lib/python3.9/site-packages/pybind11/share/cmake/pybind11
 ```
 
 After that build using make
@@ -41,3 +40,4 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> import vectorssd
 >>>
 ```
+

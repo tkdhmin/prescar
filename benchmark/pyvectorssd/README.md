@@ -19,6 +19,11 @@ To operate the VectorSSD within Python program, see the following APIs which are
 - `VectorSearch`(const float query_vector[VECTOR_DIMENSION], int top_k, VectorSearchReturn* rets)
 - `VectorBuild`()
 
+## Usage
+```bash
+python3 pyvectorssd.py --config config.json --type a 
+```
+
 ## Example
 See the below code or `tutorial_db.py` as an example.
 
@@ -32,8 +37,4 @@ mydb.put(key, value) # Put
 mydb.close()
 ```
 
-## Usage
-```bash
-python pyvectorssd.py --config config.json --type a --dataset ../../workl
-oads/synthetic_vectors.csv
-```
+

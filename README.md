@@ -21,7 +21,10 @@ LICENSE
 README.md
 ```
 
+## Quick Start
 
+See [INSTALL.md](INSTALL.md) for detailed setup instructions.
+See [EXPERIMENTS.md](./benchmark/EXPERIMENTS.md) for reproducing paper results.
 
 
 ## Benchmarks & experiments

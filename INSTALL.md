@@ -8,7 +8,7 @@
 
 ### Software
 - Ubuntu 20.04 LTS (Linux kernel 5.4.0-90)
-- GCC 9.4.0
+- GCC 11.4.0
 - Python 3.9
 - Xilinx Vivado 2019.1 (for FPGA bitstream)
 
@@ -39,13 +39,11 @@ sudo ./xsetup
 Installations for PL (FPGA part) and PS (ARM Cortex-A9) are needed.
 
 ```bash
-mkdir {project_folder}
-cd  {project_folder}
 source /tools/Xilinx/SDK/2019.1/settings64.sh
 xsct -nodisp
 setws
 
-createhw -name cosmos_hw -hwspec {your_path}/OpenSSD2.hdf
+createhw -name cosmos_hw -hwspec vector1/cosmos_hw/system.hdf
 createbsp -name cosmos_bsp -hwproject cosmos_hw -proc ps7_cortexa9_0
 createapp -name cosmos_app -hwproject cosmos_hw -bsp cosmos_bsp -proc ps7_cortexa9_0
 
