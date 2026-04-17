@@ -10,6 +10,7 @@ class OperationType(CheckableEnum):
     VECTOR_INSERT = "VECTOR_INSERT"
     VECTOR_SEARCH = "VECTOR_SEARCH"
     INDEX_BUILD = "INDEX_BUILD"
+    INDEX_BUILD_RESUME = "INDEX_BUILD_RESUME"
 
 
 class WorkloadOperation:
@@ -29,11 +30,14 @@ class WorkloadOperation:
 class BaseWorkloadGenerator(ABC):
     """Abstract class for workload generator"""
 
-    def __init__(self, vector_dim: int = 1024, dataset: list = [], seed: int = None):
-        self.vector_dim = vector_dim
+    def __init__(self, embeddings, metadata, query_embeddings, query_metadata, seed: int = None):
         self.arrival_generator = ArrivalTimeGenerator()
         self.csv_row_counter = 0
-        self.dataset = dataset
+        self.query_csv_row_counter = 0
+        self.embeddings = embeddings
+        self.metadata = metadata
+        self.query_embeddings = query_embeddings
+        self.query_metadata = query_metadata
         self.seed = seed
         if seed is not None:
             np.random.seed(seed)
@@ -49,7 +53,11 @@ class BaseWorkloadGenerator(ABC):
         return (k, v)
 
     def _generate_vector(self) -> np.ndarray:
-        return self.dataset[self.csv_row_counter]["vector"]
+        return self.embeddings[self.csv_row_counter]
 
     def _generate_key(self) -> str:
-        return str(self.dataset[self.csv_row_counter]["vid"])
+        return str(self.metadata.iloc[self.csv_row_counter]["vid"])
+    
+    def _generate_query_vector(self) -> np.ndarray:
+        self.query_csv_row_counter += 1
+        return self.query_embeddings[self.query_csv_row_counter - 1]

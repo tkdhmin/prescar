@@ -13,24 +13,24 @@ class WorkloadA(BaseWorkloadGenerator):
 
     def generate(self, **params) -> List[WorkloadOperation]:
         n_requests = params["req"]
-        if n_requests < 1:
-            raise ValueError("n_requests must be at least 1")
-
         n_inserts = n_requests - 1
+
+        if n_requests < 1 and n_inserts < 1:
+            raise ValueError("n_requests and n_inserts must be at least 1")
+
         operations = []
         if self.seed is None:
             raise AssertionError("The seed must be set.")
 
         dist_parms = {k: v for k, v in params.items() if k not in ["req", "distribution"]}
 
-        if n_inserts > 0:
-            arrival_time_of_insert = self.arrival_generator.generate_single_distribution(
-                n_inserts, DistributionType(params["distribution"]), **dist_parms
-            )
+        arrival_time_of_insert = self.arrival_generator.generate_single_distribution(
+            n_inserts, DistributionType(params["distribution"]), **dist_parms
+        )
 
-            for arrival_time in arrival_time_of_insert:
-                key, vector = self._generate_kv()
-                operations.append(WorkloadOperation(OperationType.VECTOR_INSERT, arrival_time, key, vector))
+        for arrival_time in arrival_time_of_insert:
+            key, vector = self._generate_kv()
+            operations.append(WorkloadOperation(OperationType.VECTOR_INSERT, arrival_time, key, vector))
 
         build_time = arrival_time_of_insert[-1] + 0.0000001
         operations.append(WorkloadOperation(OperationType.INDEX_BUILD, build_time))

@@ -14,6 +14,9 @@ class WorkloadB(BaseWorkloadGenerator):
         n_requests = params["req"]
         top_k = params["top_k"]
 
+        if n_requests < 1:
+            raise ValueError("n_requests must be at least 1")
+
         operations = []
         dist_parms = {k: v for k, v in params.items() if k not in ["req", "distribution", "top_k"]}
         arrival_times = self.arrival_generator.generate_single_distribution(
@@ -21,7 +24,7 @@ class WorkloadB(BaseWorkloadGenerator):
         )
 
         for arrival_time in arrival_times:
-            query_vector = self._generate_vector()
+            query_vector = self._generate_query_vector()
             operations.append(
                 WorkloadOperation(OperationType.VECTOR_SEARCH, arrival_time, vector=query_vector, top_k=top_k)
             )

@@ -2,12 +2,14 @@ import argparse
 import csv
 import json
 import logging
+import os
 import sys
 
 sys.path.append("../build")
-
 import vectorssd
+
 import numpy as np
+import pandas as pd
 from impl.workload_a import WorkloadA
 from impl.workload_b import WorkloadB
 from impl.workload_c import WorkloadC
@@ -21,27 +23,47 @@ from typing import Dict, List
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-COSMOS_PLUS_OPENSSD_ENABLE: bool = True
+COSMOS_PLUS_OPENSSD_ENABLE: bool = False
 
 
 class WorkloadFactory:
     @staticmethod
-    def create_generator(workload_type: str, seed: int = None, dataset: list = [], **kwargs) -> BaseWorkloadGenerator:
+    def create_generator(workload_type: str, emb:np.ndarray, meta, q_emb, q_meta, seed: int = None) -> BaseWorkloadGenerator:
         generators = {"a": WorkloadA, "b": WorkloadB, "c": WorkloadC, "d": WorkloadD, "e": WorkloadE}
 
         if workload_type not in generators:
             raise ValueError(f"Unknown workload type: {workload_type}")
-        return generators[workload_type](seed=seed, dataset=dataset, **kwargs)
+        return generators[workload_type](seed=seed, embeddings=emb, metadata=meta, query_embeddings=q_emb, query_metadata=q_meta)
 
 
 class DemoConfigurator:
-    def __init__(self, config_path: str = None, dataset: str = None):
+    def __init__(self, config_path: str = None, workload_type: str = None):
         self.config_path = config_path
-        self.dataset_path = dataset
+        self.workload_type = workload_type
+        self.config: Dict[str, str] = {}
+        self.dim = 0
+        self.embeddings = None
+        self.metadata = None
+        self.query_embeddings = None
+        self.query_metadata = None
+        self.dataset_name = None
 
     def load(self) -> None:
         self.config: Dict[str, str] = self._config_load()
-        self.dataset: List[dict] = self._dataset_load()
+        target_config = self.config["scenarios"][self.workload_type]
+        self.dim = target_config.get('dimension', 96)
+        embeddings_path = target_config.get('embeddings', None)
+        metadata_path = target_config.get('metadata', None)
+
+        query_embeddings_path = target_config.get('query_embeddings', None)
+        query_metadata_path = target_config.get('query_metadata', None)
+
+        if self.workload_type in ['a', 'c', 'd', 'e']:
+            self._dataset_load(embeddings_path, metadata_path)
+        elif self.workload_type in ['b', 'd', 'e']:
+            self._query_dataset_load(query_embeddings_path, query_metadata_path)
+        else:
+            raise NotImplementedError(self.workload_type)
 
     def _config_load(self) -> dict:
         """Load and validate config file, return as dictionary."""
@@ -56,35 +78,59 @@ class DemoConfigurator:
         except Exception as e:
             raise AssertionError(f"Error while loading config file: {e}")
 
-    def _dataset_load(self) -> list:
-        dataset = []
+    def _query_dataset_load(self, q_emb_path: str, q_meta_path: str) -> None:
         try:
-            with open(self.dataset_path, newline="") as csvfile:
-                reader = csv.DictReader(csvfile, delimiter="\t")
-                for row in reader:
-                    op_type = row["op_type"]
-                    vid = int(row["vid"])
-                    vector = np.array([float(row[str(i)]) for i in range(len(row) - 2)])
-                    dataset.append({"op_type": op_type, "vid": vid, "vector": vector})
+            logger.info(f"Loading query embeddings from {q_emb_path}.")
+            self.query_embeddings = np.load(q_emb_path)
+            logger.info(f"Query Embeddings shape: {self.query_embeddings.shape}")
+            
+            logger.info(f"Loading metdata from {q_meta_path}.")
+            self.query_metadata = pd.read_csv(q_meta_path)
+            logger.info(f"Query Metadata shape: {self.query_metadata.shape}")
+            assert len(self.query_embeddings) == len(self.query_metadata)
         except Exception as e:
-            raise AssertionError(f"Error while loading csv dataset file: {e}")
-        return dataset
+            raise AssertionError(f"Error while loading query dataset file: {e}")
+
+    def _dataset_load(self, emb_path: str, meta_path: str) -> None:
+        try:
+            # Corpus Load
+            logger.info(f"Loading embeddings from {emb_path}.")
+            self.embeddings = np.load(emb_path)
+            logger.info(f"Embeddings shape: {self.embeddings.shape}")
+
+            # Metdata Load
+            logger.info(f"Loading metdata from {meta_path}.")
+            self.metadata = pd.read_csv(meta_path)
+            logger.info(f"Metadata shape: {self.metadata.shape}")
+
+            self.dataset_name = os.path.basename(emb_path).split('_embeddings.npy')[0]
+            self.metadata['vid'] = range(1, 1 + len(self.metadata))
+            logger.info(f"Assigned VID range: {1} ~ {len(self.metadata)}")
+            
+            assert len(self.embeddings) == len(self.metadata)
+        except Exception as e:
+            raise AssertionError(f"Error while loading corpus dataset file: {e}")
+        
 
 
-def demo_workload(config: Dict[str, str], dataset: list, target_workload_type: str) -> None:
+def demo_workload(config: Dict[str, str], emb, meta, q_emb, q_meta, target_workload_type) -> None:
     vector_dim = config.get("dimension", None)
     scenarios = config.get("scenarios", {})
     collection_name = config.get("collection_name", "None")
 
-    if vector_dim != len(dataset[0]["vector"]):
-        raise ValueError(f"Different dimension: {vector_dim} vs {len(dataset[0]['vector'])}")
+    if emb is not None:
+        if vector_dim != len(emb[0]):
+            raise ValueError(f"Different dimension: {vector_dim} vs {len(emb[0])}")
+    elif q_emb is not None:
+        if vector_dim != len(q_emb[0]):
+            raise ValueError(f"Different dimension: {vector_dim} vs {len(q_emb[0])}")
 
     for workload_type, config in scenarios.items():
         if workload_type is not target_workload_type:
             continue
         logger.info(f"--- Workload {workload_type.upper()} with {vector_dim} ---")
 
-        generator = WorkloadFactory.create_generator(workload_type, vector_dim=vector_dim, dataset=dataset, seed=45)
+        generator = WorkloadFactory.create_generator(workload_type, emb, meta, q_emb, q_meta, seed=45)
         operations = generator.generate(**config)
         if COSMOS_PLUS_OPENSSD_ENABLE:
             run_vectorssd_demo(collection_name, operations, vector_dim)
@@ -135,12 +181,11 @@ def main():
     parser.add_argument("--config", type=str, required=True, help="Json-typed file for configuration")
     parser.add_argument("--output_dir", type=str, default="./results", help="Results directory")
     parser.add_argument("--type", type=str, required=True, help="Specified workload scenario type for test")
-    parser.add_argument("--dataset", type=str, help="Vector dataset for test")
     args = parser.parse_args()
 
-    configurator = DemoConfigurator(args.config, args.dataset)
+    configurator = DemoConfigurator(args.config, args.type)
     configurator.load()
-    demo_workload(configurator.config, configurator.dataset, args.type)
+    demo_workload(configurator.config, configurator.embeddings, configurator.metadata, configurator.query_embeddings, configurator.query_metadata, args.type)
 
 
 if __name__ == "__main__":

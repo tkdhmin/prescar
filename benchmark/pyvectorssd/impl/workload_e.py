@@ -1,24 +1,27 @@
 from typing import List
 from impl.arrival_time_gen import DistributionType
 from impl.workload_base import BaseWorkloadGenerator, OperationType, WorkloadOperation
+import math
 
 
 class WorkloadE(BaseWorkloadGenerator):
     """Workload E generates a total of N operations:
-    - The (N * r) operations: Vector Insertion, where the r is a ratio of the Vector Insertion operation
-    - The (N * (1 - r)) operations: Vector Search
+    The index build will be triggered one time after 50% insertions.
+
+    The remaining (N - 1) operations consists of Vector Insertion and Search along with the r, which is a ratio of each operation.
+    If the r is a ratio of Vector Insertion, then the following makes sence:
+    - The ((N - 1) * r) operations: Vector Insertion, where the r is a ratio
+    - The ((N - 1) * (1 - r)) operations: Vector Search
     """
 
     def generate(self, **params) -> List[WorkloadOperation]:
         n_requests = params["req"]
+        n_builds = 1
+        n_effective_requests = n_requests - n_builds
 
-        n_inserts = int(n_requests * params["portion_insert"])
-        n_searchs = n_requests - n_inserts
+        n_inserts = int(n_effective_requests * 0.7)
+        n_searchs = n_effective_requests - n_inserts
 
-        portion_insert = float(params.get("portion_insert", 0.0))
-        portion_search = float(params.get("portion_search", 0.0))
-        if portion_insert + portion_search != 1.0:
-            raise ValueError(f"Total ratio must be one: {portion_insert}, {portion_search}")
 
         distribution_insert = DistributionType(params["distribution_insert"])
         distribution_search = DistributionType(params["distribution_search"])
@@ -50,5 +53,15 @@ class WorkloadE(BaseWorkloadGenerator):
                 operations.append(
                     WorkloadOperation(OperationType.VECTOR_SEARCH, arrival_time, query_vector, top_k=top_k)
                 )
+
+        insert_ops = [op for op in operations if op.op_type == OperationType.VECTOR_INSERT]
+        if insert_ops:
+            insert_ops.sort(key=lambda x: x.arrival_time)
+            # 50% insertion
+            mid_idx = math.ceil(len(insert_ops) * 0.5) - 1
+            build_time = insert_ops[mid_idx].arrival_time + 1e-6
+            operations.append(WorkloadOperation(OperationType.INDEX_BUILD, build_time))
+        else:
+            pass
 
         return sorted(operations, key=lambda x: x.arrival_time)
