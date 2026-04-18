@@ -45,7 +45,7 @@ class WorkloadD(BaseWorkloadGenerator):
             elif event_type == "type2":  # SEARCH
                 query_vector = self._generate_vector()
                 operations.append(
-                    WorkloadOperation(OperationType.VECTOR_SEARCH, arrival_time, query_vector, top_k=top_k)
+                    WorkloadOperation(OperationType.VECTOR_SEARCH, arrival_time, vector=query_vector, top_k=top_k)
                 )
 
         return sorted(operations, key=lambda x: x.arrival_time)

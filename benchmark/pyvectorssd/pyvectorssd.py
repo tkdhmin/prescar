@@ -1,4 +1,5 @@
 import argparse
+import time
 import csv
 import json
 import logging
@@ -15,6 +16,7 @@ from impl.workload_b import WorkloadB
 from impl.workload_c import WorkloadC
 from impl.workload_d import WorkloadD
 from impl.workload_e import WorkloadE
+from impl.workload_insert_only import WorkloadInsertOnly
 from impl.workload_base import BaseWorkloadGenerator, OperationType, WorkloadOperation
 from impl.supported_config import SupportedConfiguration
 from typing import Dict, List
@@ -23,13 +25,13 @@ from typing import Dict, List
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-COSMOS_PLUS_OPENSSD_ENABLE: bool = False
+COSMOS_PLUS_OPENSSD_ENABLE: bool = True
 
 
 class WorkloadFactory:
     @staticmethod
     def create_generator(workload_type: str, emb:np.ndarray, meta, q_emb, q_meta, seed: int = None) -> BaseWorkloadGenerator:
-        generators = {"a": WorkloadA, "b": WorkloadB, "c": WorkloadC, "d": WorkloadD, "e": WorkloadE}
+        generators = {"a": WorkloadA, "b": WorkloadB, "c": WorkloadC, "d": WorkloadD, "e": WorkloadE, "insertonly": WorkloadInsertOnly}
 
         if workload_type not in generators:
             raise ValueError(f"Unknown workload type: {workload_type}")
@@ -58,7 +60,7 @@ class DemoConfigurator:
         query_embeddings_path = target_config.get('query_embeddings', None)
         query_metadata_path = target_config.get('query_metadata', None)
 
-        if self.workload_type in ['a', 'c', 'd', 'e']:
+        if self.workload_type in ['a', 'c', 'd', 'e', 'insertonly']:
             self._dataset_load(embeddings_path, metadata_path)
         elif self.workload_type in ['b', 'd', 'e']:
             self._query_dataset_load(query_embeddings_path, query_metadata_path)
@@ -83,6 +85,10 @@ class DemoConfigurator:
             logger.info(f"Loading query embeddings from {q_emb_path}.")
             self.query_embeddings = np.load(q_emb_path)
             logger.info(f"Query Embeddings shape: {self.query_embeddings.shape}")
+            if self.query_embeddings.shape[1] > self.dim:
+                self.query_embeddings = self.query_embeddings[:, :self.dim]
+            else:
+                raise AssertionError(f"Dimension is not reached to 96: Check {self.query_embeddings.shape}")
             
             logger.info(f"Loading metdata from {q_meta_path}.")
             self.query_metadata = pd.read_csv(q_meta_path)
@@ -95,7 +101,12 @@ class DemoConfigurator:
         try:
             # Corpus Load
             logger.info(f"Loading embeddings from {emb_path}.")
-            self.embeddings = np.load(emb_path)
+            base_emb = np.load(emb_path)
+            if base_emb.shape[1] > self.dim:
+                base_emb = base_emb[:, :self.dim]
+            else:
+                raise AssertionError(f"Dimension is not reached to 96: Check {base_emb.shape}")
+            self.embeddings = base_emb
             logger.info(f"Embeddings shape: {self.embeddings.shape}")
 
             # Metdata Load
@@ -114,6 +125,7 @@ class DemoConfigurator:
 
 
 def demo_workload(config: Dict[str, str], emb, meta, q_emb, q_meta, target_workload_type) -> None:
+    logger.info("Demo run")
     vector_dim = config.get("dimension", None)
     scenarios = config.get("scenarios", {})
     collection_name = config.get("collection_name", "None")
@@ -126,12 +138,13 @@ def demo_workload(config: Dict[str, str], emb, meta, q_emb, q_meta, target_workl
             raise ValueError(f"Different dimension: {vector_dim} vs {len(q_emb[0])}")
 
     for workload_type, config in scenarios.items():
-        if workload_type is not target_workload_type:
+        if workload_type != target_workload_type:
             continue
         logger.info(f"--- Workload {workload_type.upper()} with {vector_dim} ---")
 
         generator = WorkloadFactory.create_generator(workload_type, emb, meta, q_emb, q_meta, seed=45)
         operations = generator.generate(**config)
+        build_found = False
         if COSMOS_PLUS_OPENSSD_ENABLE:
             run_vectorssd_demo(collection_name, operations, vector_dim)
         else:
@@ -140,17 +153,36 @@ def demo_workload(config: Dict[str, str], emb, meta, q_emb, q_meta, target_workl
 
 def run_vectorssd_demo(collection_name: str, operations: List[WorkloadOperation], vector_dim) -> None:
     mydb = vectorssd.DB()
-    _ = mydb.open("/dev/ng1n1", collection_name)
-    for op in operations:
+    _ = mydb.open("/dev/ng0n1", collection_name)
+    build_paused: bool = False
+    for idx, op in enumerate(operations):
+        logger.info(f"[{idx}] {op}")
         if op.op_type == OperationType.VECTOR_INSERT:
             mydb.put(op.key, op.vector)
         elif op.op_type == OperationType.INDEX_BUILD:
             mydb.vector_build()
+            time.sleep(1)
+            mydb.vector_build_status()
+            logger.info("Index is building..")
+        elif op.op_type == OperationType.PAUSE_BUILD:
+            if mydb.vector_build_status():
+                mydb.pause_build()
+                build_paused = True
+                logger.info("Index build paused")
+            else:
+                pass
+        elif op.op_type == OperationType.RESUME_BUILD:
+            if build_paused:
+                mydb.resume_build()
+                logger.info("Index build resumed")
+                build_paused = False
+            while mydb.vector_build_status():
+                logger.info("Index is building..")
+                time.sleep(5)
         elif op.op_type == OperationType.VECTOR_SEARCH:
             if op.top_k is None:
                 raise ValueError(op.top_k)
-            query_vector = np.random.randn(vector_dim).astype(np.float32)
-            mydb.vector_search(query_vector, op.top_k)
+            _ = mydb.vector_search(op.vector, op.top_k)
         else:
             raise AssertionError("Not supported")
 

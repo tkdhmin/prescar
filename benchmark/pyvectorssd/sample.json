@@ -1,6 +1,6 @@
 {
     "collection_name": "VectorSSDCollection",
-    "dimension": 128,
+    "dimension": 96,
     "index_type": "HNSW",
     "metric_type": "COSINE",
     "index_params": {
@@ -24,16 +24,16 @@
     ],
     "scenarios": {
         "a": {
-            "embeddings": "/home/dhmin/prescar/benchmark/dataset/sample_corpus_embeddings.npy",
-            "metadata": "/home/dhmin/prescar/benchmark/dataset/sample_corpus_metadata.csv",
+            "embeddings": "../dataset/sample_corpus_embeddings.npy",
+            "metadata": "../dataset/sample_corpus_metadata.csv",
             "req": 16384,
             "distribution": "normal",
             "mu": 0.0,
             "sigma": 1.0
         },
         "b": {
-            "query_embeddings": "/home/dhmin/prescar/benchmark/dataset/sample_queries_embeddings.npy",
-            "query_metadata": "/home/dhmin/prescar/benchmark/dataset/sample_queries_metadata.csv",
+            "query_embeddings": "../dataset/sample_queries_embeddings.npy",
+            "query_metadata": "../dataset/sample_queries_metadata.csv",
             "req": 6600,
             "distribution": "normal",
             "mu": 1.0,
@@ -41,10 +41,10 @@
             "top_k": 10
         },
         "c": {
-            "embeddings": "/home/dhmin/prescar/benchmark/dataset/sample_corpus_embeddings.npy",
-            "metadata": "/home/dhmin/prescar/benchmark/dataset/sample_corpus_metadata.csv",
-            "query_embeddings": "/home/dhmin/prescar/benchmark/dataset/sample_queries_embeddings.npy",
-            "query_metadata": "/home/dhmin/prescar/benchmark/dataset/sample_queries_metadata.csv",
+            "embeddings": "../dataset/sample_corpus_embeddings.npy",
+            "metadata": "../dataset/sample_corpus_metadata.csv",
+            "query_embeddings": "../dataset/sample_queries_embeddings.npy",
+            "query_metadata": "../dataset/sample_queries_metadata.csv",
             "req": 100,
             "distribution": "normal",
             "mu_search": 0.0,
@@ -53,10 +53,10 @@
             "build_trigger_ratio": 0.5
         },
         "d": {
-            "embeddings": "/home/dhmin/prescar/benchmark/dataset/sample_corpus_embeddings.npy",
-            "metadata": "/home/dhmin/prescar/benchmark/dataset/sample_corpus_metadata.csv",
-            "query_embeddings": "/home/dhmin/prescar/benchmark/dataset/sample_queries_embeddings.npy",
-            "query_metadata": "/home/dhmin/prescar/benchmark/dataset/sample_queries_metadata.csv",
+            "embeddings": "../dataset/sample_corpus_embeddings.npy",
+            "metadata": "../dataset/sample_corpus_metadata.csv",
+            "query_embeddings": "../dataset/sample_queries_embeddings.npy",
+            "query_metadata": "../dataset/sample_queries_metadata.csv",
             "req": 50,
             "distribution_search": "zipf",
             "a_search": 1.2,
@@ -65,17 +65,25 @@
             "distribution_insert": "uniform"
         },
         "e": {
-            "embeddings": "/home/dhmin/prescar/benchmark/dataset/sample_corpus_embeddings.npy",
-            "metadata": "/home/dhmin/prescar/benchmark/dataset/sample_corpus_metadata.csv",
-            "query_embeddings": "/home/dhmin/prescar/benchmark/dataset/sample_queries_embeddings.npy",
-            "query_metadata": "/home/dhmin/prescar/benchmark/dataset/sample_queries_metadata.csv",
-            "req": 10,
+            "embeddings": "../dataset/sample_corpus_embeddings.npy",
+            "metadata": "../dataset/sample_corpus_metadata.csv",
+            "query_embeddings": "../dataset/sample_queries_embeddings.npy",
+            "query_metadata": "../dataset/sample_queries_metadata.csv",
+            "req": 20,
             "distribution_insert": "zipf",
             "a_insert": 1.1,
             "distribution_search": "normal",
             "mu_search": 0.0,
             "sigma_search": 1.0,
             "top_k_search": 20
+        },
+        "insertonly": {
+            "embeddings": "../dataset/sample_corpus_embeddings.npy",
+            "metadata": "../dataset/sample_corpus_metadata.csv",
+            "req": 16384,
+            "distribution": "normal",
+            "mu": 0.0,
+            "sigma": 1.0           
         }
     }
 }

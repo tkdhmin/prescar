@@ -29,6 +29,11 @@
 *.dylib
 *.pyc
 
+# Build related
+*.make
+*.dir
+benchmark/build/
+
 # Executables
 *.exe
 *.out
