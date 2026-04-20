@@ -34,7 +34,7 @@
         "b": {
             "query_embeddings": "../dataset/sample_queries_embeddings.npy",
             "query_metadata": "../dataset/sample_queries_metadata.csv",
-            "req": 6600,
+            "req": 10,
             "distribution": "normal",
             "mu": 1.0,
             "sigma": 0.3,
@@ -69,13 +69,13 @@
             "metadata": "../dataset/sample_corpus_metadata.csv",
             "query_embeddings": "../dataset/sample_queries_embeddings.npy",
             "query_metadata": "../dataset/sample_queries_metadata.csv",
-            "req": 20,
+            "req": 6600,
             "distribution_insert": "zipf",
             "a_insert": 1.1,
             "distribution_search": "normal",
             "mu_search": 0.0,
             "sigma_search": 1.0,
-            "top_k_search": 20
+            "top_k_search": 10
         },
         "insertonly": {
             "embeddings": "../dataset/sample_corpus_embeddings.npy",

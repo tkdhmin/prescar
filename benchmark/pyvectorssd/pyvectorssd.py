@@ -19,6 +19,8 @@ from impl.workload_e import WorkloadE
 from impl.workload_insert_only import WorkloadInsertOnly
 from impl.workload_base import BaseWorkloadGenerator, OperationType, WorkloadOperation
 from impl.supported_config import SupportedConfiguration
+from impl.scheduler import PrescarScheduler
+from impl.segment_tracker import SegmentTracker
 from typing import Dict, List
 
 
@@ -39,9 +41,9 @@ class WorkloadFactory:
 
 
 class DemoConfigurator:
-    def __init__(self, config_path: str = None, workload_type: str = None):
+    def __init__(self, config_path: str = None, workload_types = None):
         self.config_path = config_path
-        self.workload_type = workload_type
+        self.workload_types = workload_types
         self.config: Dict[str, str] = {}
         self.dim = 0
         self.embeddings = None
@@ -52,20 +54,22 @@ class DemoConfigurator:
 
     def load(self) -> None:
         self.config: Dict[str, str] = self._config_load()
-        target_config = self.config["scenarios"][self.workload_type]
-        self.dim = target_config.get('dimension', 96)
-        embeddings_path = target_config.get('embeddings', None)
-        metadata_path = target_config.get('metadata', None)
 
-        query_embeddings_path = target_config.get('query_embeddings', None)
-        query_metadata_path = target_config.get('query_metadata', None)
+        for workload_type in self.workload_types:
+            target_config = self.config["scenarios"][workload_type]
+            self.dim = target_config.get('dimension', 96)
+            embeddings_path = target_config.get('embeddings', None)
+            metadata_path = target_config.get('metadata', None)
 
-        if self.workload_type in ['a', 'c', 'd', 'e', 'insertonly']:
-            self._dataset_load(embeddings_path, metadata_path)
-        elif self.workload_type in ['b', 'd', 'e']:
-            self._query_dataset_load(query_embeddings_path, query_metadata_path)
-        else:
-            raise NotImplementedError(self.workload_type)
+            query_embeddings_path = target_config.get('query_embeddings', None)
+            query_metadata_path = target_config.get('query_metadata', None)
+
+            if workload_type in ['a', 'c', 'd', 'e', 'insertonly']:
+                self._dataset_load(embeddings_path, metadata_path)
+            if workload_type in ['b', 'd', 'e']:
+                self._query_dataset_load(query_embeddings_path, query_metadata_path)
+            if workload_type not in ['a', 'b', 'c', 'd', 'e', 'insertonly']:
+                raise AssertionError(workload_type)
 
     def _config_load(self) -> dict:
         """Load and validate config file, return as dictionary."""
@@ -124,7 +128,7 @@ class DemoConfigurator:
         
 
 
-def demo_workload(config: Dict[str, str], emb, meta, q_emb, q_meta, target_workload_type) -> None:
+def demo_workload(config: Dict[str, str], emb, meta, q_emb, q_meta, target_workload_types, tracker) -> None:
     logger.info("Demo run")
     vector_dim = config.get("dimension", None)
     scenarios = config.get("scenarios", {})
@@ -137,21 +141,28 @@ def demo_workload(config: Dict[str, str], emb, meta, q_emb, q_meta, target_workl
         if vector_dim != len(q_emb[0]):
             raise ValueError(f"Different dimension: {vector_dim} vs {len(q_emb[0])}")
 
-    for workload_type, config in scenarios.items():
-        if workload_type != target_workload_type:
+    for workload_type in target_workload_types:
+        
+        if workload_type not in scenarios:
             continue
+        scenario_config = scenarios[workload_type]
         logger.info(f"--- Workload {workload_type.upper()} with {vector_dim} ---")
 
         generator = WorkloadFactory.create_generator(workload_type, emb, meta, q_emb, q_meta, seed=45)
-        operations = generator.generate(**config)
-        build_found = False
+        operations = generator.generate(**scenario_config)
+
+        results = {}
+        scheduler = PrescarScheduler(tracker=tracker, policy="SLO-P")
+        results["SLO-P"] = scheduler.schedule(operations)
+        # scheduler.save_schedule_png(results, output_path="schedule.png")
+
         if COSMOS_PLUS_OPENSSD_ENABLE:
-            run_vectorssd_demo(collection_name, operations, vector_dim)
+            run_vectorssd_demo(collection_name, operations, vector_dim, tracker)
         else:
             run_virtual_demo(collection_name, operations, vector_dim)
 
 
-def run_vectorssd_demo(collection_name: str, operations: List[WorkloadOperation], vector_dim) -> None:
+def run_vectorssd_demo(collection_name: str, operations: List[WorkloadOperation], vector_dim, tracker) -> None:
     mydb = vectorssd.DB()
     _ = mydb.open("/dev/ng0n1", collection_name)
     build_paused: bool = False
@@ -159,11 +170,15 @@ def run_vectorssd_demo(collection_name: str, operations: List[WorkloadOperation]
         logger.info(f"[{idx}] {op}")
         if op.op_type == OperationType.VECTOR_INSERT:
             mydb.put(op.key, op.vector)
+            tracker.on_insert()
         elif op.op_type == OperationType.INDEX_BUILD:
             mydb.vector_build()
             time.sleep(1)
-            mydb.vector_build_status()
-            logger.info("Index is building..")
+            # NOTE: Synchronous index build trigger
+            while mydb.vector_build_status():
+                logger.info("Index is building..")
+                time.sleep(5)
+            tracker.on_build_complete()
         elif op.op_type == OperationType.PAUSE_BUILD:
             if mydb.vector_build_status():
                 mydb.pause_build()
@@ -176,9 +191,15 @@ def run_vectorssd_demo(collection_name: str, operations: List[WorkloadOperation]
                 mydb.resume_build()
                 logger.info("Index build resumed")
                 build_paused = False
+            tracker.on_build_complete()
+        elif op.op_type == OperationType.INDEX_BUILD_ASYNC:
+            mydb.vector_build()
+            logger.info("Index build triggered (async)")
+        elif op.op_type == OperationType.INDEX_BUILD_WAIT:
             while mydb.vector_build_status():
                 logger.info("Index is building..")
                 time.sleep(5)
+            logger.info("Index build completed")
         elif op.op_type == OperationType.VECTOR_SEARCH:
             if op.top_k is None:
                 raise ValueError(op.top_k)
@@ -212,12 +233,16 @@ def main():
     parser = argparse.ArgumentParser(description="VectorSSD's Realistic Workload Generator")
     parser.add_argument("--config", type=str, required=True, help="Json-typed file for configuration")
     parser.add_argument("--output_dir", type=str, default="./results", help="Results directory")
-    parser.add_argument("--type", type=str, required=True, help="Specified workload scenario type for test")
+    # parser.add_argument("--type", type=str, required=True, help="Specified workload scenario type for test")
+    parser.add_argument("--type", type=str, nargs="+", required=True, help="Workload scenario types to run in order (e.g. --type a e)")
     args = parser.parse_args()
 
     configurator = DemoConfigurator(args.config, args.type)
     configurator.load()
-    demo_workload(configurator.config, configurator.embeddings, configurator.metadata, configurator.query_embeddings, configurator.query_metadata, args.type)
+
+    tracker = SegmentTracker()
+
+    demo_workload(configurator.config, configurator.embeddings, configurator.metadata, configurator.query_embeddings, configurator.query_metadata, args.type, tracker)
 
 
 if __name__ == "__main__":

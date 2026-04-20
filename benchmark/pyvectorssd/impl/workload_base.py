@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import numpy as np
 from impl.arrival_time_gen import ArrivalTimeGenerator
@@ -10,6 +10,8 @@ class OperationType(CheckableEnum):
     VECTOR_INSERT = "VECTOR_INSERT"
     VECTOR_SEARCH = "VECTOR_SEARCH"
     INDEX_BUILD = "INDEX_BUILD"
+    INDEX_BUILD_ASYNC = "INDEX_BUILD_ASYNC"
+    INDEX_BUILD_WAIT = "INDEX_BUILD_WAIT"
     RESUME_BUILD = "RESUME_BUILD"
     PAUSE_BUILD = "PAUSE_BUILD"
 
@@ -23,6 +25,7 @@ class WorkloadOperation:
         self.key = key
         self.vector = vector
         self.top_k = top_k
+        self.deadline: Optional[float] = 1 # 1sec
 
     def __repr__(self):
         return f"WorkloadOperation({self.op_type.value}, t={self.arrival_time:.3f}, key={self.key}, vector is emitted, top_k={self.top_k})"
