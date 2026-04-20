@@ -481,6 +481,10 @@ static void searchNeighborsEf(const unsigned int queryVectorDramAddr[], const un
   HNSWIndex* hnswIndex = (HNSWIndex*)(&(vectorIndex->hnsw));
   XTime st, ed;
 
+  if (ef > EF_CONSTRUCTION){
+    assert(!"ef must be less than the supported EF_CONSTRUCTION");
+  }
+
   CLEAR_VISITED(hnswIndex);
 
   MinHeap to_visit;
