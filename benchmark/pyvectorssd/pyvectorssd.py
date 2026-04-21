@@ -128,7 +128,7 @@ class DemoConfigurator:
         
 
 
-def demo_workload(config: Dict[str, str], emb, meta, q_emb, q_meta, target_workload_types, tracker) -> None:
+def demo_workload(config: Dict[str, str], emb, meta, q_emb, q_meta, target_workload_types, tracker, output_dir: str = None) -> None:
     logger.info("Demo run")
     vector_dim = config.get("dimension", None)
     scenarios = config.get("scenarios", {})
@@ -157,17 +157,20 @@ def demo_workload(config: Dict[str, str], emb, meta, q_emb, q_meta, target_workl
         # scheduler.save_schedule_png(results, output_path="schedule.png")
 
         if COSMOS_PLUS_OPENSSD_ENABLE:
-            run_vectorssd_demo(collection_name, operations, vector_dim, tracker)
+            log_path = os.path.join(output_dir, f"execution_log_workload_{workload_type}.csv") if output_dir else None
+            run_vectorssd_demo(collection_name, operations, vector_dim, tracker, log_path=log_path)
         else:
             run_virtual_demo(collection_name, operations, vector_dim)
 
 
-def run_vectorssd_demo(collection_name: str, operations: List[WorkloadOperation], vector_dim, tracker) -> None:
+def run_vectorssd_demo(collection_name: str, operations: List[WorkloadOperation], vector_dim, tracker, log_path: str = None) -> None:
     mydb = vectorssd.DB()
     _ = mydb.open("/dev/ng0n1", collection_name)
     build_paused: bool = False
+    log_rows = []
     for idx, op in enumerate(operations):
         logger.info(f"[{idx}] {op}")
+        log_rows.append({"seq": idx, "op_type": op.op_type.value})
         if op.op_type == OperationType.VECTOR_INSERT:
             mydb.put(op.key, op.vector)
             tracker.on_insert()
@@ -209,6 +212,14 @@ def run_vectorssd_demo(collection_name: str, operations: List[WorkloadOperation]
 
     mydb.close()
 
+    if log_path:
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        with open(log_path, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=["seq", "op_type"])
+            writer.writeheader()
+            writer.writerows(log_rows)
+        logger.info(f"Execution log saved: {log_path}")
+
 
 def run_virtual_demo(collection_name: str, operations: List[WorkloadOperation], vector_dim) -> None:
     mydb = vectorssd.DB()
@@ -242,7 +253,7 @@ def main():
 
     tracker = SegmentTracker()
 
-    demo_workload(configurator.config, configurator.embeddings, configurator.metadata, configurator.query_embeddings, configurator.query_metadata, args.type, tracker)
+    demo_workload(configurator.config, configurator.embeddings, configurator.metadata, configurator.query_embeddings, configurator.query_metadata, args.type, tracker, output_dir=args.output_dir)
 
 
 if __name__ == "__main__":

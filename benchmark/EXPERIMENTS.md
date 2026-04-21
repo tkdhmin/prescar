@@ -38,3 +38,21 @@ cd pyvectorssd
 ```
 
 ### Expected Output
+
+For each workload, a CSV log file is generated under `./results/`:
+
+```
+results/
+├── execution_log_workload_a.csv
+├── execution_log_workload_b.csv
+└── ...
+```
+
+Each file records the sequence of operations issued to the Cosmos+ OpenSSD:
+
+| Column | Description |
+|--------|-------------|
+| `seq` | Execution order index |
+| `op_type` | Operation type (e.g., `VECTOR_INSERT`, `VECTOR_SEARCH`, `INDEX_BUILD`) |
+
+The operation sequence reflects the scheduling decisions made by the PRESCAR scheduler (SLO-P policy).
